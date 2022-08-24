@@ -6,6 +6,8 @@ export type RplContentProps = {
 </script>
 
 <script setup lang="ts">
+import './table'
+
 defineProps<RplContentProps>()
 </script>
 
