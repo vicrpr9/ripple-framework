@@ -2,13 +2,14 @@
 
 .rpl-table {
   --local-dividing-border: var(--rpl-border-1) solid var(--rpl-clr-neutral-300);
-  --local-scroll-indicator-opacity: 0.16;
-  --local-scroll-indicator-width: 1rem;
+  --local-scroll-indicator-width: 1.6rem;
+  --local-scrolling-idicator-fade: rgba(25 25 25 / 16%);
+  --local-table-row-background: rgba(0 0 0 / 4%);
 
   margin-top: var(--rpl-sp-5);
   background-color: var(--rpl-clr-neutral-0);
 
-  @media (--rpl-bp-l) {
+  @media (--rpl-bp-m) {
     margin-top: var(--rpl-sp-6);
   }
 
@@ -70,41 +71,33 @@
 
   tbody {
     tr:nth-child(odd) {
-      mix-blend-mode: darken;
-      background-color: var(--rpl-clr-neutral-100);
+      background-color: var(--local-table-row-background);
     }
   }
 
   &__scroll-container {
+    z-index: 1;
     position: relative;
-
-    &-inner {
-      overflow-x: auto;
-    }
+    overflow-x: auto;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    background-repeat: no-repeat;
+    background-position: 0 0, 100% 0;
+    background-image: linear-gradient(to right, var(--local-scrolling-idicator-fade), transparent), linear-gradient(to left, var(--local-scrolling-idicator-fade), transparent);
+    background-size: calc(var(--local-scroll-indicator-width) / 2) 100%;
 
     &::before,
     &::after {
       content: "";
-      opacity: 0;
-      position: absolute;
-      top: 0;
-      height: 100%;
-      width: var(--local-scroll-indicator-width);
+      z-index: -1;
+      position: relative;
+      min-width: var(--local-scroll-indicator-width);
+      background: var(--rpl-clr-light);
     }
 
-    &::before {
-      left: 0;
-      background-image: linear-gradient(to right, var(--rpl-clr-neutral-800), transparent);
+    table {
+      margin: 0 calc(-1 * var(--local-scroll-indicator-width));
     }
-
-    &::after {
-      right: 0;
-      background-image: linear-gradient(to left, var(--rpl-clr-neutral-800), transparent);
-    }
-  }
-
-  &--scroll-left::before,
-  &--scroll-right::after {
-    opacity: var(--local-scroll-indicator-opacity);
   }
 }
