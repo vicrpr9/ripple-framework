@@ -27,10 +27,6 @@ export const RplIconGroups = {
   standard: [
     'icon-accessible',
     'icon-add',
-    'icon-arrow-up',
-    'icon-arrow-right',
-    'icon-arrow-down',
-    'icon-arrow-left',
     'icon-attach',
     'icon-browser',
     'icon-calendar-lined',

@@ -14,7 +14,7 @@
   }
 
   &__info {
-    display: flex;
+    display: none;
     align-items: flex-end;
     justify-content: flex-end;
     margin-bottom: var(--rpl-sp-2);
@@ -22,6 +22,14 @@
     &-icon {
       margin: 0 0 var(--rpl-sp-1) var(--rpl-sp-2);
     }
+
+    &--visible {
+      display: flex;
+    }
+  }
+
+  &--scrollable .rpl-table__info {
+    display: flex;
   }
 
   table {
