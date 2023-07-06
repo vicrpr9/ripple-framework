@@ -32,6 +32,7 @@ export default (
   const size = ref(10)
   const from = ref(0)
   const filterForm = ref({})
+  const onAggregationUpdateHook = ref()
 
   const getQueryClause = () => {
     if (searchTerm.value) {
@@ -49,6 +50,25 @@ export default (
       _filters.push(...userFilters.value)
     }
     return _filters
+  }
+
+  const getAggregations = () => {
+    if (Array.isArray(userFilterConfig) && userFilterConfig.length > 0) {
+      const aggregations = userFilterConfig.reduce((aggs, currentFilter) => {
+        if (currentFilter.aggregations?.source === 'elastic') {
+          aggs = {
+            ...aggs,
+            [`${currentFilter.id}`]: {
+              terms: {
+                field: currentFilter.aggregations.field
+              }
+            }
+          }
+        }
+        return aggs
+      }, {})
+      return aggregations
+    }
   }
 
   const getSortClause = () => {
@@ -122,7 +142,8 @@ export default (
         },
         size: size.value,
         from: from.value,
-        sort: getSortClause()
+        sort: getSortClause(),
+        aggs: getAggregations()
       }
     } else {
       return {
@@ -131,7 +152,8 @@ export default (
         },
         size: size.value,
         from: from.value,
-        sort: getEmptySortClause()
+        sort: getEmptySortClause(),
+        aggs: getAggregations()
       }
     }
   }
@@ -156,6 +178,18 @@ export default (
       typeof searchResultsMappingFn === 'function'
     ) {
       results.value = response.hits?.hits.map(searchResultsMappingFn)
+    }
+    if (response.aggregations) {
+      const mappedAgs = Object.keys(response.aggregations).reduce(
+        (aggs, key) => {
+          return {
+            ...aggs,
+            [`${key}`]: response.aggregations[key].buckets.map((bkt) => bkt.key)
+          }
+        },
+        {}
+      )
+      onAggregationUpdateHook.value(mappedAgs)
     }
   }
 
@@ -188,6 +222,7 @@ export default (
   return {
     getSearchResults,
     getSuggestions,
+    onAggregationUpdateHook,
     searchTerm,
     results,
     suggestions,

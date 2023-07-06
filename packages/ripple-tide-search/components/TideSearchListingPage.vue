@@ -64,13 +64,39 @@ const {
   searchTerm,
   results,
   suggestions,
-  filterForm
+  filterForm,
+  onAggregationUpdateHook
 } = useTideSearch(
   props.queryConfig,
   props.userFilters,
   props.globalFilters,
   props.searchResultsMappingFn
 )
+
+const uiFilters = ref(props.userFilters)
+
+// Updates filter options with aggregation value
+// Not currently working as RplDropdown options aren't reactive
+onAggregationUpdateHook.value = (aggs) => {
+  Object.keys(aggs).forEach((key) => {
+    uiFilters.value.forEach((uiFilter, idx) => {
+      if (uiFilter.id === key) {
+        uiFilters.value[idx] = {
+          ...uiFilters.value[idx],
+          props: {
+            ...uiFilters.value[idx].props,
+            label: 'test',
+            options: aggs[key].map((item) => ({
+              id: item,
+              label: item,
+              value: item
+            }))
+          }
+        }
+      }
+    })
+  })
+}
 
 const handleSearchSubmit = () => {
   getSearchResults()
