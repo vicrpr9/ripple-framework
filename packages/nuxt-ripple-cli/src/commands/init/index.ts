@@ -7,11 +7,7 @@ export default function rplInitCommand() {
 
   rplInitCommand
     .description('Initialize a new Ripple project')
-    .argument(
-      '[template]',
-      'Template to use - site or layer currently',
-      process.cwd()
-    )
+    .argument('[template]', 'Template to use - site', process.cwd())
     .argument(
       '[directory]',
       'The directory to init project into, defaults to the current working directory',
