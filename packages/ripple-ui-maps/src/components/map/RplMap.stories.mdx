@@ -4,6 +4,7 @@ import {
   Story,
   ArgsTable
 } from '@storybook/addon-docs'
+import { ref, provide } from 'vue'
 import { RplAccordion } from '@dpc-sdp/ripple-ui-core/vue'
 import RplMap from './RplMap.vue'
 import RplMapProviderEsri from './providers/RplMapProviderEsri.vue'
@@ -15,6 +16,14 @@ import '@dpc-sdp/ripple-ui-core/style/components'
 export const Template = (args) => ({
   components: { RplMap, RplMapProviderEsri, RplMapProviderVicMap, RplMapProviderMapbox, RplAccordion },
   setup() {
+    const rplMapRef = ref(null)
+    function setRplMapRef(mapInstance) {
+      rplMapRef.value = mapInstance
+    }
+    provide('rplMapInstance', {
+      rplMapRef,
+      setRplMapRef
+    })
     const getClusteredFeatures = (itms) => {
       return itms.map(itm => {
         return {
