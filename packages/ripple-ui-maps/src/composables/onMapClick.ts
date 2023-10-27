@@ -1,6 +1,7 @@
 import { onMounted, ref } from 'vue'
 import { buffer, boundingExtent } from 'ol/extent'
 import { getDistance } from 'ol/sphere'
+import { easeOut } from 'ol/easing'
 import type { Map } from 'ol'
 import type { Ref } from 'vue'
 
@@ -49,11 +50,6 @@ export default (mapRef: Ref<{ map: Map } | null>, closeOnMapClick) => {
             )
 
             // zoom to region
-            console.log(
-              'isFeaturesCloseTogether',
-              clusterExtentCoordinates,
-              isFeaturesCloseTogether
-            )
             if (isFeaturesCloseTogether) {
               selectedFeatures.value = feature.features.map((f) =>
                 f.getProperties()
@@ -62,11 +58,15 @@ export default (mapRef: Ref<{ map: Map } | null>, closeOnMapClick) => {
             } else {
               const zoomRegion = buffer(
                 boundingExtent(clusterExtentCoordinates),
-                1
+                1000
               )
               const mapSize = map.getSize()
               if (mapSize) {
-                map.getView().fit(zoomRegion, { size: mapSize })
+                map.getView().fit(zoomRegion, {
+                  size: mapSize,
+                  easing: easeOut,
+                  duration: 400
+                })
               }
             }
           } else {

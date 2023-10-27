@@ -6,19 +6,32 @@ import {
 } from '@storybook/addon-docs'
 import { ref, provide } from 'vue'
 import { RplAccordion } from '@dpc-sdp/ripple-ui-core/vue'
-import { registerRplMapsPlugin } from '@dpc-sdp/ripple-ui-maps'
 import RplMap from './RplMap.vue'
 import RplMapProviderEsri from './providers/RplMapProviderEsri.vue'
 import RplMapProviderVicMap from './providers/RplMapProviderVicMap.vue'
 import RplMapProviderMapbox from './providers/RplMapProviderMapbox.vue'
+import RplMapLegend from './../legend/RplMapLegend.vue'
 import { transform } from 'ol/proj'
 import Icon from 'ol/style/Icon'
 import featureData from './__fixture__/features.json'
 import '@dpc-sdp/ripple-ui-core/style/components'
 import markerIconDefaultSrc from './../feature-pin/icon-pin.svg?url'
+const getColor = (population) => {
+  switch (true) {
+    case population < 10491:
+      return [255, 80, 156]
+    case population < 30491:
+      return [181, 0, 44]
+    case population < 40491:
+      return [242, 59, 72]
+    case population < 80491:
+      return [253, 218, 36]
+  }
+  return 'red'
+}
 
 export const Template = (args) => ({
-  components: { RplMap, RplMapProviderEsri, RplMapProviderVicMap,RplMapProviderMapbox, RplAccordion },
+  components: { RplMap, RplMapProviderEsri, RplMapProviderVicMap, RplMapProviderMapbox, RplAccordion, RplMapLegend },
   setup() {
     const rplMapRef = ref(null)
     function setRplMapRef(mapInstance) {
@@ -47,9 +60,7 @@ export const Template = (args) => ({
       v-bind="args"
     >
       <template #map-provider>
-        <rpl-map-provider-esri v-if="args.provider === 'esri'" />
-        <rpl-map-provider-vic-map v-if="args.provider === 'vicmap'" />
-        <rpl-map-provider-mapbox v-if="args.provider === 'mapbox'" />
+        <rpl-map-provider-mapbox />
       </template>
       <template #popupTitle="{ selectedFeatures }">
         <span v-if="selectedFeatures.length === 1">
@@ -66,16 +77,11 @@ export const Template = (args) => ({
         <RplAccordion v-else :items="getClusteredFeatures(selectedFeatures)">
         </RplAccordion>
       </template>
+      <template #legend>
+        <rpl-map-legend></rpl-map-legend>
+      </template>
     </RplMap>
   `
-})
-const featuresProj3857 = featureData.map(itm => {
-  const geoPoint = transform([itm.lng, itm.lat], 'EPSG:4326', 'EPSG:3857')
-  return {
-    ...itm,
-    lng: geoPoint[0],
-    lat: geoPoint[1]
-  }
 })
 
 <Meta
@@ -89,40 +95,30 @@ const featuresProj3857 = featureData.map(itm => {
 
 <Canvas>
   <Story
-    name='Mapbox'
+    name='Custom pins'
     args={{
-      id: '123',
+      id: 'dsafsdf',
       initialCenter: [
         16136905.843820328,
         -4383057.013522999
       ],
-      features:featuresProj3857,
-      projection: 'EPSG:3857',
-      provider: 'mapbox'
-    }}
-  >
-    {Template.bind()}
-  </Story>
-  <Story
-    name='Esri'
-    args={{
-      id: '123',
-      features: featureData,
-      provider: 'esri'
-    }}
-  >
-    {Template.bind()}
-  </Story>
-  <Story
-    name='Vicmap'
-    args={{
-      id: '123',
-      provider: 'vicmap',
-      initialCenter: [
-        16136905.843820328,
-        -4383057.013522999
-      ],
-      features:featuresProj3857,
+      features: featureData.map(itm => {
+        const geoPoint = transform([itm.lng, itm.lat], 'EPSG:4326', 'EPSG:3857')
+        return {
+          ...itm,
+          lng: geoPoint[0],
+          lat: geoPoint[1]
+        }
+      }),
+      pinStyle: (feature) => {
+        const population = feature.get('population')
+        const ic = new Icon({
+          src: markerIconDefaultSrc,
+          color: getColor(population)
+        })
+        ic.load()
+        return ic
+      },
       projection: 'EPSG:3857'
     }}
   >

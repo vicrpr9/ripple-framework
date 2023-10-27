@@ -22,4 +22,9 @@
 
 .rpl-map-popup__close {
   margin-left: auto;
+  padding: var(--rpl-sp-1);
+  border-radius: var(--rpl-border-radius-3);
+  &:hover {
+    color: var(--rpl-clr-primary);
+  }
 }

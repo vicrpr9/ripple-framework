@@ -33,3 +33,11 @@
 .rpl-map__control-fullscreen {
   top: calc(var(--rpl-sp-12) + var(--rpl-sp-8) + var(--rpl-sp-4));
 }
+
+.rpl-map__legend {
+  position: absolute;
+  z-index: 999;
+  right: var(--rpl-sp-4);
+  bottom: var(--rpl-sp-4);
+  box-shadow: var(--rpl-elevation-1);
+}

@@ -3,33 +3,39 @@ import { useRippleEvent, rplEventPayload } from '@dpc-sdp/ripple-ui-core'
 import type { IRplMapFeature } from './../../types'
 import { onMounted, ref, inject } from 'vue'
 import { Map } from 'ol'
-import RplMapFeaturePin from './../feature-pin/RplMapFeaturePin.vue'
+import Icon from 'ol/style/Icon'
 import RplMapPopUp from './../popup/RplMapPopUp.vue'
 import RplMapCluster from './../cluster/RplMapCluster.vue'
+import markerIconDefaultSrc from './../feature-pin/icon-pin.svg?url'
+import zoomInIcon from './../../assets/icons/icon-zoom-in.svg?raw'
+import zoomOutIcon from './../../assets/icons/icon-zoom-out.svg?raw'
 import onMapClick from './../../composables/onMapClick'
 
 interface Props {
   features?: IRplMapFeature[]
   projection?: 'EPSG:4326' | 'EPSG:3857'
-  baseUrl?: string
-  format?: string
-  styles?: string | string[]
   initialZoom?: number
   initialCenter?: [number, number]
-  closeOnMapClick: boolean
-  basemapProvider: string
+  closeOnMapClick?: boolean
+  pinStyle?: Function
+  mapHeight?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  basemapProvider: 'esri',
-  baseUrl: `https://base.maps.vic.gov.au/service`,
   closeOnMapClick: true,
-  format: 'image/png',
   projection: 'EPSG:4326',
-  styles: 'default',
   features: () => [],
   initialZoom: 7.3,
-  initialCenter: () => [144.9631, -36.8136] // melbourne CBD
+  mapHeight: 600,
+  initialCenter: () => [144.9631, -36.8136], // melbourne CBD
+  pinStyle: (feature) => {
+    const ic = new Icon({
+      src: markerIconDefaultSrc,
+      color: feature.get('color') || 'red'
+    })
+    ic.load()
+    return ic
+  }
 })
 
 const center = ref(props.initialCenter)
@@ -54,6 +60,15 @@ const { popupIsOpen, selectedFeatures } = onMapClick(
 function onPopUpClose() {
   popupIsOpen.value = false
 }
+
+const createHTMLElementFromString = (text) => {
+  const div = document.createElement('div')
+  div.innerHTML = text.trim()
+  return div.firstElementChild
+}
+
+const zoomInLabel = createHTMLElementFromString(zoomInIcon)
+const zoomOutLabel = createHTMLElementFromString(zoomOutIcon)
 </script>
 
 <template>
@@ -76,8 +91,7 @@ function onPopUpClose() {
       ref="mapRef"
       :loadTilesWhileAnimating="true"
       :loadTilesWhileInteracting="true"
-      style="height: 600px"
-      :projection="projection"
+      :style="`height: ${mapHeight}px`"
       :controls="[]"
     >
       <ol-view
@@ -101,23 +115,27 @@ function onPopUpClose() {
                 <ol-geom-point
                   :coordinates="[feature.lng, feature.lat]"
                 ></ol-geom-point>
-                <ol-style>
-                  <slot name="pin">
-                    <RplMapFeaturePin />
-                  </slot>
-                </ol-style>
+                <ol-style> </ol-style>
               </ol-feature>
             </ol-source-vector>
-
-            <RplMapCluster></RplMapCluster>
+            <slot name="pin">
+              <RplMapCluster :pinStyle="pinStyle"></RplMapCluster>
+            </slot>
           </ol-animated-clusterlayer>
         </slot>
       </ol-vector-layer>
-      <ol-zoom-control className="rpl-map__control rpl-map__control-zoom" />
+      <ol-zoom-control
+        className="rpl-map__control rpl-map__control-zoom"
+        :zoomInLabel="zoomInLabel"
+        :zoomOutLabel="zoomOutLabel"
+      />
       <ol-fullscreen-control
         className="rpl-map__control rpl-map__control-fullscreen"
       />
     </ol-map>
+    <div class="rpl-map__legend">
+      <slot name="legend"></slot>
+    </div>
   </div>
 </template>
 

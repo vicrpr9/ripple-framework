@@ -6,19 +6,15 @@ import {
 } from '@storybook/addon-docs'
 import { ref, provide } from 'vue'
 import { RplAccordion } from '@dpc-sdp/ripple-ui-core/vue'
-import { registerRplMapsPlugin } from '@dpc-sdp/ripple-ui-maps'
 import RplMap from './RplMap.vue'
 import RplMapProviderEsri from './providers/RplMapProviderEsri.vue'
 import RplMapProviderVicMap from './providers/RplMapProviderVicMap.vue'
 import RplMapProviderMapbox from './providers/RplMapProviderMapbox.vue'
-import { transform } from 'ol/proj'
-import Icon from 'ol/style/Icon'
 import featureData from './__fixture__/features.json'
 import '@dpc-sdp/ripple-ui-core/style/components'
-import markerIconDefaultSrc from './../feature-pin/icon-pin.svg?url'
 
 export const Template = (args) => ({
-  components: { RplMap, RplMapProviderEsri, RplMapProviderVicMap,RplMapProviderMapbox, RplAccordion },
+  components: { RplMap, RplMapProviderEsri, RplMapProviderVicMap, RplMapProviderMapbox, RplAccordion },
   setup() {
     const rplMapRef = ref(null)
     function setRplMapRef(mapInstance) {
@@ -47,13 +43,13 @@ export const Template = (args) => ({
       v-bind="args"
     >
       <template #map-provider>
-        <rpl-map-provider-esri v-if="args.provider === 'esri'" />
-        <rpl-map-provider-vic-map v-if="args.provider === 'vicmap'" />
-        <rpl-map-provider-mapbox v-if="args.provider === 'mapbox'" />
+        <rpl-map-provider-esri v-if="args.mapProvider === 'esri'" />
+        <rpl-map-provider-vic-map v-if="args.mapProvider === 'vicmap'" />
+        <rpl-map-provider-mapbox v-if="args.mapProvider === 'mapbox'" />
       </template>
       <template #popupTitle="{ selectedFeatures }">
         <span v-if="selectedFeatures.length === 1">
-          {{ selectedFeatures[0].city}}
+          {{ selectedFeatures[0].title}}
         </span>
         <span v-else>
           {{ selectedFeatures.length }} items found in this area
@@ -69,14 +65,6 @@ export const Template = (args) => ({
     </RplMap>
   `
 })
-const featuresProj3857 = featureData.map(itm => {
-  const geoPoint = transform([itm.lng, itm.lat], 'EPSG:4326', 'EPSG:3857')
-  return {
-    ...itm,
-    lng: geoPoint[0],
-    lat: geoPoint[1]
-  }
-})
 
 <Meta
   title='Maps/core'
@@ -89,41 +77,41 @@ const featuresProj3857 = featureData.map(itm => {
 
 <Canvas>
   <Story
-    name='Mapbox'
+    name='Esri maps'
     args={{
-      id: '123',
-      initialCenter: [
-        16136905.843820328,
-        -4383057.013522999
-      ],
-      features:featuresProj3857,
-      projection: 'EPSG:3857',
-      provider: 'mapbox'
-    }}
-  >
-    {Template.bind()}
-  </Story>
-  <Story
-    name='Esri'
-    args={{
-      id: '123',
+      id: 'example',
       features: featureData,
-      provider: 'esri'
+      mapProvider: 'esri',
+      projection: 'EPSG:4326'
     }}
   >
     {Template.bind()}
   </Story>
   <Story
-    name='Vicmap'
+    name='VicMap maps'
     args={{
-      id: '123',
-      provider: 'vicmap',
-      initialCenter: [
-        16136905.843820328,
-        -4383057.013522999
-      ],
-      features:featuresProj3857,
+      id: 'example',
+      mapProvider: 'vicmap',
+      features: featureData,
       projection: 'EPSG:3857'
+    }}
+  >
+    {Template.bind()}
+  </Story>
+  <Story
+    name='Mapbox maps'
+    args={{
+      id: 'example',
+      mapProvider: 'mapbox',
+      features: featureData.map(itm => {
+        const geoPoint = transform([itm.lng, itm.lat], 'EPSG:4326', 'EPSG:3857')
+        return {
+          ...itm,
+          lng: geoPoint[0],
+          lat: geoPoint[1]
+        }
+      }),
+      projection: 'EPSG:4326'
     }}
   >
     {Template.bind()}
