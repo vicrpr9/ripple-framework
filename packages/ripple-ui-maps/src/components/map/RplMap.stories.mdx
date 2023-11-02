@@ -15,7 +15,7 @@ import { transform } from 'ol/proj'
 import Icon from 'ol/style/Icon'
 import featureData from './__fixture__/features.json'
 import '@dpc-sdp/ripple-ui-core/style/components'
-import markerIconDefaultSrc from './../feature-pin/icon-pin.svg?url'
+import { getIconForPopulation } from './__fixture__/utils.ts'
 
 export const Template = (args) => ({
   components: { RplMap, RplMapProviderEsri, RplMapProviderVicMap,RplMapProviderMapbox, RplAccordion },
@@ -29,10 +29,10 @@ export const Template = (args) => ({
       setRplMapRef
     })
     const getClusteredFeatures = (itms) => {
-      return itms.map(itm => {
+      return itms.map((itm, idx) => {
         return {
-          id: itm.id,
-          title: itm.title,
+          id: `${idx}-${itm.city}`,
+          title: itm.city,
           content: itm.description
         }
       })
@@ -63,19 +63,11 @@ export const Template = (args) => ({
         <p class="rpl-type-p-small" v-if="selectedFeatures.length === 1">
           {{ selectedFeatures[0].description}}
         </p>
-        <RplAccordion v-else :items="getClusteredFeatures(selectedFeatures)">
+        <RplAccordion v-else :items="getClusteredFeatures(selectedFeatures)" :displayToggleAll="false">
         </RplAccordion>
       </template>
     </RplMap>
   `
-})
-const featuresProj3857 = featureData.map(itm => {
-  const geoPoint = transform([itm.lng, itm.lat], 'EPSG:4326', 'EPSG:3857')
-  return {
-    ...itm,
-    lng: geoPoint[0],
-    lat: geoPoint[1]
-  }
 })
 
 <Meta
@@ -92,12 +84,7 @@ const featuresProj3857 = featureData.map(itm => {
     name='Mapbox'
     args={{
       id: '123',
-      initialCenter: [
-        16136905.843820328,
-        -4383057.013522999
-      ],
-      features:featuresProj3857,
-      projection: 'EPSG:3857',
+      features:featureData,
       provider: 'mapbox'
     }}
   >
@@ -118,12 +105,36 @@ const featuresProj3857 = featureData.map(itm => {
     args={{
       id: '123',
       provider: 'vicmap',
-      initialCenter: [
-        16136905.843820328,
-        -4383057.013522999
-      ],
-      features:featuresProj3857,
-      projection: 'EPSG:3857'
+      projection: 'EPSG:3857',
+      features:featureData
+    }}
+  >
+    {Template.bind()}
+  </Story>
+  <Story
+    name='Custom pins'
+    args={{
+      id: '123',
+      provider: 'mapbox',
+      features:featureData,
+      pinStyle: (feature) => {
+        const population = feature.get('population')
+        const icon = getIconForPopulation(population)
+        const ic = new Icon(icon)
+        ic.load()
+        return ic
+      }
+    }}
+  >
+    {Template.bind()}
+  </Story>
+  <Story
+    name='Popup on click'
+    args={{
+      id: '123',
+      features:featureData,
+      provider: 'mapbox',
+      popupType: 'feature'
     }}
   >
     {Template.bind()}

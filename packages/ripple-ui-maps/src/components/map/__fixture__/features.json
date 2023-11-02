@@ -224,6 +224,13 @@
     "description": "Castlemaine is a historic gold rush town known for its artistic community and festivals."
   },
   {
+    "city": "Castlemaine 2",
+    "lat": -37.0637,
+    "lng": 144.2182,
+    "population": 6757,
+    "description": "Castlemaine 2 is a historic gold rush town known for its artistic community and festivals."
+  },
+  {
     "city": "Seymour",
     "lat": -37.03,
     "lng": 145.13,

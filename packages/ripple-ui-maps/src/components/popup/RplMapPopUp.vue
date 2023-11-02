@@ -1,5 +1,5 @@
 <template>
-  <div v-show="isOpen" class="rpl-map-popup">
+  <div v-show="isOpen" class="rpl-map-popup" :class="`rpl-map-popup--${type}`">
     <div class="rpl-map-popup__header">
       <h3 class="rpl-type-h4">
         <slot name="header"></slot>
@@ -26,10 +26,12 @@ import type { rplEventPayload } from '@dpc-sdp/ripple-ui-core'
 
 interface Props {
   isOpen: boolean
+  type?: 'feature' | 'sidebar'
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  isOpen: false
+  isOpen: false,
+  type: 'sidebar'
 })
 
 const emit = defineEmits<{

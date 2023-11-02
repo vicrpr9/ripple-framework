@@ -15,7 +15,6 @@
   padding: var(--rpl-sp-4);
 }
 
-
 .rpl-map-popup__body {
   padding: var(--rpl-sp-4);
 }
@@ -28,3 +27,11 @@
     color: var(--rpl-clr-primary);
   }
 }
+
+.rpl-map-popup--feature {
+  position: relative;
+  width: 250px;
+  height: initial;
+  display: block;
+}
+

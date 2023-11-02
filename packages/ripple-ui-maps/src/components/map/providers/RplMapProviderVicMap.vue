@@ -17,7 +17,8 @@ const props = withDefaults(defineProps<Props>(), {
   baseUrl: `https://base.maps.vic.gov.au/service`,
   requestParams: () => ({
     SERVICE: 'WMS',
-    request: 'GetTile'
+    request: 'GetTile',
+    CRS: 'EPSG%3A3857'
   }),
   format: 'image/png',
   layer: 'CARTO_WM_256'
