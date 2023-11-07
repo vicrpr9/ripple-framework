@@ -4,7 +4,7 @@ import type { IRplMapFeature } from './../../types'
 import { onMounted, ref, inject, computed } from 'vue'
 import { Map } from 'ol'
 import Icon from 'ol/style/Icon'
-import { transform } from 'ol/proj'
+import { fromLonLat } from 'ol/proj'
 import RplMapPopUp from './../popup/RplMapPopUp.vue'
 import RplMapCluster from './../cluster/RplMapCluster.vue'
 import markerIconDefaultSrc from './../feature-pin/icon-pin.svg?url'
@@ -45,30 +45,37 @@ const zoom = ref(props.initialZoom)
 const rotation = ref(0)
 const view = ref(null)
 
-const { setRplMapRef } = inject('rplMapInstance')
+const { setRplMapRef, setRplMapSelectedFeatures } = inject('rplMapInstance')
 
 // Reference to ol/map instance
 const mapRef = ref<{ map: Map } | null>(null)
+const { popupIsOpen, selectedFeatures, overlayPosition } = onMapClick(
+  mapRef,
+  props.closeOnMapClick,
+  props.projection
+)
 
 onMounted(() => {
   setRplMapRef(mapRef.value.map)
+  setRplMapSelectedFeatures(selectedFeatures)
 })
 
 const center = computed(() => {
   if (props.projection === 'EPSG:3857') {
-    return transform(props.initialCenter, 'EPSG:4326', 'EPSG:3857')
+    return fromLonLat(props.initialCenter)
   } else {
     return props.initialCenter
   }
 })
 
-const projectedFeatures = computed(() => {
+const mapFeatures = computed(() => {
   if (Array.isArray(props.features)) {
     if (props.projection === 'EPSG:4326') {
       return props.features
     } else if (props.projection === 'EPSG:3857') {
+      // we convert all features to match projection
       return props.features.map((itm) => {
-        const geoPoint = transform([itm.lng, itm.lat], 'EPSG:4326', 'EPSG:3857')
+        const geoPoint = fromLonLat([itm.lng, itm.lat])
         return {
           ...itm,
           lng: geoPoint[0],
@@ -80,18 +87,10 @@ const projectedFeatures = computed(() => {
   return []
 })
 
-const { popupIsOpen, selectedFeatures, overlayPosition } = onMapClick(
-  mapRef,
-  props.closeOnMapClick,
-  props.projection
-)
-
 function onPopUpClose() {
   popupIsOpen.value = false
 }
-/*
- *
- */
+
 const createHTMLElementFromString = (text: string): HTMLDivElement => {
   const div = document.createElement('div')
   div.innerHTML = text.trim()
@@ -105,29 +104,34 @@ const fullScreenLabel = createHTMLElementFromString(enlargeIcon)
 
 <template>
   <div class="rpl-map">
-    <RplMapPopUp
-      v-if="popupType === 'sidebar'"
-      :is-open="popupIsOpen"
-      @close="onPopUpClose"
-    >
-      <template v-if="selectedFeatures && selectedFeatures.length > 0" #header>
-        <slot name="popupTitle" :selectedFeatures="selectedFeatures">
-          {{ selectedFeatures[0].title }}
-        </slot>
-      </template>
-      <template v-if="selectedFeatures && selectedFeatures.length > 0">
-        <slot name="popupContent" :selectedFeatures="selectedFeatures">
-          <p class="rpl-type-p-small">
-            {{ selectedFeatures[0].description }}
-          </p>
-        </slot>
-      </template>
-    </RplMapPopUp>
-
+    <slot name="sidebar" :popupIsOpen="popupIsOpen" :mapHeight="mapHeight">
+      <RplMapPopUp
+        v-if="popupType === 'sidebar'"
+        :is-open="popupIsOpen"
+        @close="onPopUpClose"
+      >
+        <template
+          v-if="selectedFeatures && selectedFeatures.length > 0"
+          #header
+        >
+          <slot name="popupTitle" :selectedFeatures="selectedFeatures">
+            {{ selectedFeatures[0].title }}
+          </slot>
+        </template>
+        <template v-if="selectedFeatures && selectedFeatures.length > 0">
+          <slot name="popupContent" :selectedFeatures="selectedFeatures">
+            <p class="rpl-type-p-small">
+              {{ selectedFeatures[0].description }}
+            </p>
+          </slot>
+        </template>
+      </RplMapPopUp>
+    </slot>
     <ol-map
       ref="mapRef"
       :loadTilesWhileAnimating="true"
       :loadTilesWhileInteracting="true"
+      class="rpl-map__map"
       :style="`height: ${mapHeight}px`"
       :controls="[]"
     >
@@ -141,12 +145,12 @@ const fullScreenLabel = createHTMLElementFromString(enlargeIcon)
       <slot name="map-provider"> </slot>
       <slot name="shapes"></slot>
 
-      <ol-vector-layer v-if="projectedFeatures && projectedFeatures.length > 0">
-        <slot name="features" :features="projectedFeatures">
+      <ol-vector-layer v-if="mapFeatures && mapFeatures.length > 0">
+        <slot name="features" :features="mapFeatures">
           <ol-animated-clusterlayer :animationDuration="500" :distance="40">
             <ol-source-vector>
               <ol-feature
-                v-for="feature in projectedFeatures"
+                v-for="feature in mapFeatures"
                 :key="feature.id"
                 :properties="feature"
               >
@@ -163,7 +167,11 @@ const fullScreenLabel = createHTMLElementFromString(enlargeIcon)
         </slot>
       </ol-vector-layer>
 
-      <slot name="popup">
+      <slot
+        name="popup"
+        :overlayPosition="overlayPosition"
+        :popupIsOpen="popupIsOpen"
+      >
         <ol-overlay
           v-if="popupIsOpen && popupType === 'feature'"
           :position="overlayPosition"

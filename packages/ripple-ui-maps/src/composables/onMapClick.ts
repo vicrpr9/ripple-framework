@@ -31,7 +31,7 @@ export default (
     const map = mapRef.value?.map
     if (map) {
       map.on('singleclick', function (evt) {
-        // IF evt.cordinates match a pin then show
+        // finds all features at cursor
         const feature = map.forEachFeatureAtPixel(
           evt.pixel,
           (feature) => {
@@ -46,6 +46,7 @@ export default (
               if (geo) {
                 const coordinates = geo.getCoordinates()
                 if (projection === 'EPSG:3857') {
+                  // we transform all coordinates to match projection
                   return transform(coordinates, 'EPSG:3857', 'EPSG:4326')
                 }
                 return coordinates
@@ -58,8 +59,8 @@ export default (
               thresholdDistance
             )
 
-            // zoom to region
             if (isFeaturesCloseTogether) {
+              // show multiple items together if they are close
               selectedFeatures.value = feature.features.map((f) =>
                 f.getProperties()
               )
@@ -68,6 +69,7 @@ export default (
                 feature.features[0].getGeometry().flatCoordinates
               popupIsOpen.value = true
             } else {
+              // zoom to fit all features in cluster in view
               const zoomRegion =
                 projection === 'EPSG:3857'
                   ? transformExtent(
@@ -88,10 +90,15 @@ export default (
               }
             }
           } else {
+            // click on feature
             selectedFeatures.value = [feature.features[0].getProperties()]
             popupIsOpen.value = true
             overlayPosition.value =
               feature.features[0].getGeometry().flatCoordinates
+            map.getView().animate({
+              center: overlayPosition.value,
+              zoom: 9
+            })
           }
         } else if (closeOnMapClick) {
           popupIsOpen.value = false
